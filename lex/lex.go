@@ -50,11 +50,11 @@ const (
 
 	patCloseParen = `^\)`
 
-    patInteger = `^(0|(-?[1-9]\d*))`
+	patInteger = `^(0|(-?[1-9]\d*))`
 
-    patSymbol = `^[^\d\s':#][^\s]+`
+	patSymbol = `^[^\d\s':#][^\s]+`
 
-    patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
+	patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
 )
 
 func TokenTypeDict() func(TokenType) string {
@@ -89,6 +89,7 @@ type Token struct {
 	Loc   int
 }
 
+// Stringer for Token struct
 func (t *Token) String() string {
 	return fmt.Sprintf("{Loc:\t%d\tType:\t%s\tToken:\t%q\t}",
 		t.Loc,
@@ -96,10 +97,12 @@ func (t *Token) String() string {
 		t.Token)
 }
 
+// is this token a ( or )?
 func (t *Token) isParen() bool {
 	return t.Typ == TOK_OPENPAREN || t.Typ == TOK_CLOSEPAREN
 }
 
+// print a slice of tokens
 func printTokens(tokens []Token) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 	for _, t := range tokens {
@@ -136,13 +139,13 @@ func prettyPrintTokens(tokens []Token) {
 // regexp.<Index> match methods return slices of ints, either
 // a nil slice, or an even number of ints that denote pairs
 // of start and end indices.
-func reIndexGroup(groups []int, group int) int {
+func regexMatchPair(groups []int, group int) int {
 	i := group * 2
 	return groups[i+1]
 }
 
 type Lexer interface {
-	Add(pat string, typ TokenType)
+	//Add(pat string, typ TokenType)
 	Lex(text string) []Token
 }
 
@@ -150,29 +153,62 @@ type lexerObject struct {
 	text     string
 	tokens   []Token
 	patterns []pattern
+	compiled []*regexp.Regexp
 	loc      int
 }
 
-func NewLexer() Lexer {
+func NewLexer(patterns []pattern) Lexer {
 	const defaultCapacity = 128
 
 	tokens := make([]Token, 0, defaultCapacity)
 	lo := &lexerObject{}
 	lo.tokens = tokens
 
-	return &lexerObject{}
+	lo.patterns = patterns
+	lo.compiled = make([]*regexp.Regexp, 0, len(patterns))
+
+	for i, p := range lo.patterns {
+		lo.compiled[i] = regexp.MustCompile(p.pat)
+	}
+
+	return lo
 }
 
 type pattern struct {
-	re  *regexp.Regexp
+	pat string
 	typ TokenType
 }
 
-func (lex *lexerObject) Add(pat string, typ TokenType) {
-	term := regexp.MustCompile(pat)
-	lex.patterns = append(lex.patterns, pattern{term, typ})
+func (lex *lexerObject) lexOnce(here string) (token Token, skip int, success bool) {
+	for i, re := range lex.compiled {
+
+		result := re.FindStringIndex(here)
+
+		if result == nil {
+			continue
+		}
+
+		// FindStringIndex returns either nil or a pair of index integers
+		_, end := result[0], result[1]
+
+		// store the location
+		token = Token{here[0:end], lex.patterns[i].typ, lex.loc}
+
+		return token, end, true
+	}
+	return Token{}, 0, false
 }
 
+func (lex *lexerObject) init(text string) {
+	lex.loc = 0
+	lex.text = text
+}
+
+func (lex *lexerObject) Lex(text string) []Token {
+	panic("TODO: implement")
+}
+
+/*
 func (lex *lexerObject) Lex(text string) []Token {
 
 	if lex == nil {
@@ -182,44 +218,10 @@ func (lex *lexerObject) Lex(text string) []Token {
 		panic("can't lex without regex actions attached!")
 	}
 
-	lex.loc = 0
-	lex.text = text
+    lex.init(text)
 
 	for len(text) > 0 {
 	scan:
-		for _, pattern := range lex.patterns {
+    tok, skip, success := lex.lexOnce(text)
 
-			re := pattern.re
-
-			result := re.FindStringIndex(text)
-
-			if result == nil {
-				continue scan
-			}
-
-			start, end := result[0], result[1]
-
-			// store the location
-			token := Token{text[start:end], pattern.typ, lex.loc}
-
-			lex.tokens = append(lex.tokens, token)
-
-			skip := end
-			if skip >= len(text) {
-				panic("Tried to skip too many runes")
-			}
-
-			lex.loc += skip
-
-			//skip to next unmatched portion
-			text = text[skip:len(text)]
-		}
-		// haven't found anything; failed to find a match
-		return nil
-	}
-	return lex.tokens
-}
-
-func main() {
-    fmt.Println("hello world")
-}
+*/
