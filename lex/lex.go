@@ -30,26 +30,25 @@ type lexerObject struct {
 	loc      int
 }
 
-func NewLexer(patterns []pattern) Lexer {
-	const defaultCapacity = 128
-
-	tokens := make([]Token, 0, defaultCapacity)
-	lo := &lexerObject{}
-	lo.tokens = tokens
-
-	lo.patterns = patterns
-	lo.compiled = make([]*regexp.Regexp, 0, len(patterns))
-
-	for i, p := range lo.patterns {
-		lo.compiled[i] = regexp.MustCompile(p.pat)
-	}
-
-	return lo
-}
-
 type pattern struct {
 	pat string
 	typ TokenType
+}
+
+func NewLexer(patterns []pattern) *lexerObject {
+	const defaultCapacity = 128
+
+	lo := &lexerObject{}
+
+    lo.tokens = make([]Token, 0, defaultCapacity)
+	lo.patterns = patterns
+
+	lo.compiled = make([]*regexp.Regexp, 0, len(patterns))
+	for _, p := range lo.patterns {
+        lo.compiled = append(lo.compiled, regexp.MustCompile(p.pat))
+	}
+
+	return lo
 }
 
 func (lex *lexerObject) lexOnce(here string) (token Token, skip int, success bool) {

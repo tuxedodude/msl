@@ -98,7 +98,8 @@ func TestRegex(t *testing.T) {
 				tc{`"abcd"`, true},
 				tc{`"a b c d `, false},
 				tc{`"a b c d"`, true},
-				// note: if we can't pass the test, then "hello""hello" will make it thru the lexer.
+				// note: if we can't pass the test, then "hello""hello" will make it thru the lexer
+                // as two tokens.
 				//tc{`"abcd""`, false},
 				tc{`"abcd")`, true},
 				tc{"\"abc\tdef\"", false}, // tabs!
@@ -124,3 +125,29 @@ func TestRegex(t *testing.T) {
 		}
 	}
 }
+
+func TestNewLexer(t *testing.T) {
+	assert := assert.New(t)
+
+    pats := []pattern{
+        {pat: patWhiteSpace, typ: TOK_WHITESPACE}, 
+        {pat: patComment, typ: TOK_COMMENT}, 
+        {pat: patSingleQuote, typ: TOK_SINGLEQUOTE}, 
+        {pat: patOpenParen, typ: TOK_OPENPAREN},
+        {pat: patCloseParen, typ: TOK_CLOSEPAREN}, 
+        {pat: patInteger, typ: TOK_INTEGER}, 
+        {pat: patSymbol, typ: TOK_SYMBOL}, 
+        {pat: patString, typ: TOK_STRING},
+    }
+
+    lex := NewLexer(pats)
+
+    assert.NotNil(lex.tokens, "lex object tokens are not nil")
+    assert.NotNil(lex.patterns, "lex object patterns are not nil")
+    assert.Equal(len(lex.patterns), len(lex.compiled), "lex object patterns and compiled regex have same number of objects")
+    assert.Equal(len(lex.patterns), len(pats), "lexerObject.tokens [] has same length as patterns passed in")
+    assert.Equal(len(lex.patterns), len(pats), "lexerObject.compiled [] has same length as patterns passed in")
+    assert.Equal(len(lex.patterns), 8, "proper number of patterns in lex object")
+}
+
+
