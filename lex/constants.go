@@ -1,8 +1,9 @@
 package lex
 
 const (
-    TOK_WHITESPACE TokenType = iota
-	TOK_OPENPAREN 
+	TOK_NONE TokenType = iota
+	TOK_WHITESPACE
+	TOK_OPENPAREN
 	TOK_CLOSEPAREN
 	TOK_SYMBOL
 	TOK_STRING
@@ -25,7 +26,7 @@ const (
 
 	patInteger = `^(0|(-?[1-9]\d*))`
 
-	patSymbol = `^[^\d\s':#][^\s]+`
+	patSymbol = `^[^\d\s':#"][^\s]+`
 
 	patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
 )

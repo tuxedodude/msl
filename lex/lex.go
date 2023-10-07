@@ -40,12 +40,12 @@ func NewLexer(patterns []pattern) *lexerObject {
 
 	lo := &lexerObject{}
 
-    lo.tokens = make([]Token, 0, defaultCapacity)
+	lo.tokens = make([]Token, 0, defaultCapacity)
 	lo.patterns = patterns
 
 	lo.compiled = make([]*regexp.Regexp, 0, len(patterns))
 	for _, p := range lo.patterns {
-        lo.compiled = append(lo.compiled, regexp.MustCompile(p.pat))
+		lo.compiled = append(lo.compiled, regexp.MustCompile(p.pat))
 	}
 
 	return lo
