@@ -42,21 +42,19 @@ const (
 	patWhiteSpace = `^\s+`
 
 	// comments start at ';' and go to end of line only.
-	// capture group to get only the comment body.
-	patComment = `(?m)^;+(.*)$`
+	patComment = `^;+(.*)$`
 
-	// look for ' plus any whitespace after
-	patSingleQuote = `'\s*`
+	patSingleQuote = `^'`
 
 	patOpenParen = `^\(`
 
 	patCloseParen = `^\)`
 
-	//Pattern for string literal
+    patInteger = `^(0|(-?[1-9]\d*))`
 
-	patInteger = `^(-?\d*)`
+    patSymbol = `^[^\d\s':#][^\s]+`
 
-    patSymbol = `^[^\d\s':][^\s]+`
+    patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
 )
 
 func TokenTypeDict() func(TokenType) string {
