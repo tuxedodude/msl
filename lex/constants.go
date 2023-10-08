@@ -16,7 +16,8 @@ const (
 	patWhiteSpace = `^\s+`
 
 	// comments start at ';' and go to end of line only.
-	patComment = `^;+(.*)$`
+	// note: (?m) is necessary for proper end of line behavior.
+	patComment = `(?m)^;[^\n]*`
 
 	patSingleQuote = `^'`
 
@@ -26,7 +27,7 @@ const (
 
 	patInteger = `^(0|(-?[1-9]\d*))`
 
-	patSymbol = `^[^\d\s':#"][^\s\)\(]+`
+	patSymbol = `^[^\d\s':#"][^\s\)\(]*`
 
 	patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
 )

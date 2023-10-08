@@ -36,7 +36,7 @@ type pattern struct {
 }
 
 func defaultLexerPatterns() []pattern {
-    return []pattern {
+	return []pattern{
 		{pat: patWhiteSpace, typ: TOK_WHITESPACE},
 		{pat: patComment, typ: TOK_COMMENT},
 		{pat: patSingleQuote, typ: TOK_SINGLEQUOTE},
@@ -49,15 +49,15 @@ func defaultLexerPatterns() []pattern {
 }
 
 func NewLexer() *lexerObject {
-    return newLexer(defaultLexerPatterns())
+	return newLexer(defaultLexerPatterns())
 }
 
 // helper method for NewLexer
 // allows unit testing
 func newLexer(patterns []pattern) *lexerObject {
-    if patterns == nil {
-        patterns = defaultLexerPatterns()
-    }
+	if patterns == nil {
+		patterns = defaultLexerPatterns()
+	}
 
 	const defaultCapacity = 128
 
@@ -75,7 +75,13 @@ func newLexer(patterns []pattern) *lexerObject {
 }
 
 func (lex *lexerObject) lexOnce(here string) (token Token, skip int, success bool) {
+
+	//defer fmt.Println()
+
+	//td := TokenTypeDict()
+
 	for i, re := range lex.compiled {
+		//fmt.Printf("%d. Trying %s: %q\n", i, td(lex.patterns[i].typ), lex.patterns[i].pat)
 
 		result := re.FindStringIndex(here)
 
@@ -86,8 +92,12 @@ func (lex *lexerObject) lexOnce(here string) (token Token, skip int, success boo
 		// FindStringIndex returns either nil or a pair of index integers
 		_, end := result[0], result[1]
 
+		t := here[0:end]
+
+		//fmt.Printf("\tsucceeded: %q\n", t)
+
 		// store the location
-		token = Token{here[0:end], lex.patterns[i].typ, lex.loc}
+		token = Token{t, lex.patterns[i].typ, lex.loc}
 
 		return token, end, true
 	}
@@ -108,21 +118,31 @@ func (lex *lexerObject) Lex(text string) []Token {
 		panic("can't lex without regex actions attached!")
 	}
 
-    lex.init(text)
+	lex.init(text)
+
+	dbgcount := 0
 
 	for len(text) > 0 {
-        tok, skip, found := lex.lexOnce(text)
+		//fmt.Printf("Lexer Pass %d on %q\n", dbgcount, text)
 
-        if !found {
-            continue
-        }
+		tok, skip, found := lex.lexOnce(text)
 
-        tok.Loc = lex.loc
-        lex.tokens = append(lex.tokens, tok)
+		if !found {
+			return nil
+		}
 
-        lex.loc += skip
-        text = text[skip:len(text)]
-    }
-    return lex.tokens
+		tok.Loc = lex.loc
+		lex.tokens = append(lex.tokens, tok)
+
+		lex.loc += skip
+
+		if skip == 0 {
+			panic("Found a match but skipped 0 runes!")
+		}
+
+		text = text[skip:len(text)]
+
+		dbgcount++
+	}
+	return lex.tokens
 }
-
