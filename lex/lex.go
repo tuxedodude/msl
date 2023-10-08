@@ -111,16 +111,13 @@ func (lex *lexerObject) init(text string) {
 
 func (lex *lexerObject) Lex(text string) []Token {
 
-	if lex == nil {
-		panic("nil lexerObject: Must instantiate lexer with NewLexer()")
-	}
 	if lex.patterns == nil {
 		panic("can't lex without regex actions attached!")
 	}
 
 	lex.init(text)
 
-	dbgcount := 0
+	//dbgcount := 0
 
 	for len(text) > 0 {
 		//fmt.Printf("Lexer Pass %d on %q\n", dbgcount, text)
@@ -142,7 +139,7 @@ func (lex *lexerObject) Lex(text string) []Token {
 
 		text = text[skip:len(text)]
 
-		dbgcount++
+		//dbgcount++
 	}
 	return lex.tokens
 }
