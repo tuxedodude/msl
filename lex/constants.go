@@ -26,7 +26,7 @@ const (
 
 	patInteger = `^(0|(-?[1-9]\d*))`
 
-	patSymbol = `^[^\d\s':#"][^\s]+`
+	patSymbol = `^[^\d\s':#"][^\s\)\(]+`
 
 	patString = `^"([^"\n\r\t]|(\\["\n\r\t]))*"`
 )

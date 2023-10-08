@@ -84,6 +84,7 @@ func TestRegex(t *testing.T) {
 				tc{"a1234", true},
 				tc{"a_stpiuf>JFd", true},
 				tc{`"anything"`, false},
+                tc{`baz)`, true},
 			},
 		},
 		{
@@ -130,18 +131,8 @@ func TestRegex(t *testing.T) {
 func TestNewLexer(t *testing.T) {
 	assert := assert.New(t)
 
-	pats := []pattern{
-		{pat: patWhiteSpace, typ: TOK_WHITESPACE},
-		{pat: patComment, typ: TOK_COMMENT},
-		{pat: patSingleQuote, typ: TOK_SINGLEQUOTE},
-		{pat: patOpenParen, typ: TOK_OPENPAREN},
-		{pat: patCloseParen, typ: TOK_CLOSEPAREN},
-		{pat: patInteger, typ: TOK_INTEGER},
-		{pat: patSymbol, typ: TOK_SYMBOL},
-		{pat: patString, typ: TOK_STRING},
-	}
-
-	lex := NewLexer(pats)
+	pats := defaultLexerPatterns()
+	lex := newLexer(pats)
 
 	assert.NotNil(lex.tokens, "lex object tokens are not nil")
 	assert.NotNil(lex.patterns, "lex object patterns are not nil")
@@ -167,7 +158,7 @@ func TestNewLexer(t *testing.T) {
 
 	tests := []struct {
 		s           string
-		tokenString string
+		expect string
 		skip        int
 		typ         TokenType
 		want        bool
@@ -199,16 +190,41 @@ func TestNewLexer(t *testing.T) {
 		{") aa)", ")", 1, TOK_CLOSEPAREN, true},
 
 		{`"hello" foo`, `"hello"`, 7, TOK_STRING, true},
+        {`baz)`, `baz`, 3, TOK_SYMBOL, true},
 	}
 
 	for _, t := range tests {
 		tok, skip, ok := lex.lexOnce(t.s)
-		assert.Equal(ok, t.want, "foo bar baz")
+		assert.Equal(ok, t.want, "unexpectedly found a token in " + t.s)
 		assert.Equal(tok.Typ, t.typ, "token type is a match"+tok.String())
 		assert.Equal(skip, t.skip, "skip count matches")
 		if t.want {
 			assert.True(ok, "should have found first token in `"+t.s+"`")
 		}
-		assert.Equal(tok.Token, t.tokenString, tok.Token+" did not match "+t.tokenString)
+		assert.Equal(tok.Token, t.expect, tok.Token+" did not match "+t.expect)
 	}
 }
+
+func TestLex_(t *testing.T) {
+	assert := assert.New(t)
+
+    lex := NewLexer()
+
+    tokens := lex.Lex("(foo bar baz)")
+
+    types := []TokenType {TOK_OPENPAREN, TOK_SYMBOL, TOK_WHITESPACE, TOK_SYMBOL,
+    TOK_WHITESPACE, TOK_SYMBOL, TOK_CLOSEPAREN}
+
+    for i, t := range tokens {
+        assert.Equal(t.Typ, types[i], "matching token types")
+    }
+    assert.Equal(len(tokens), 7, fmt.Sprintf("should be 7 tokens, have %d", len(tokens)))
+}
+
+
+/*
+func TestFOO(t *testing.T) {
+    assert := assert.New(t)
+    assert.Fail("FIX ME")
+}
+*/

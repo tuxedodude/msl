@@ -35,7 +35,30 @@ type pattern struct {
 	typ TokenType
 }
 
-func NewLexer(patterns []pattern) *lexerObject {
+func defaultLexerPatterns() []pattern {
+    return []pattern {
+		{pat: patWhiteSpace, typ: TOK_WHITESPACE},
+		{pat: patComment, typ: TOK_COMMENT},
+		{pat: patSingleQuote, typ: TOK_SINGLEQUOTE},
+		{pat: patOpenParen, typ: TOK_OPENPAREN},
+		{pat: patCloseParen, typ: TOK_CLOSEPAREN},
+		{pat: patInteger, typ: TOK_INTEGER},
+		{pat: patSymbol, typ: TOK_SYMBOL},
+		{pat: patString, typ: TOK_STRING},
+	}
+}
+
+func NewLexer() *lexerObject {
+    return newLexer(defaultLexerPatterns())
+}
+
+// helper method for NewLexer
+// allows unit testing
+func newLexer(patterns []pattern) *lexerObject {
+    if patterns == nil {
+        patterns = defaultLexerPatterns()
+    }
+
 	const defaultCapacity = 128
 
 	lo := &lexerObject{}
@@ -77,11 +100,6 @@ func (lex *lexerObject) init(text string) {
 }
 
 func (lex *lexerObject) Lex(text string) []Token {
-	panic("TODO: implement")
-}
-
-/*
-func (lex *lexerObject) Lex(text string) []Token {
 
 	if lex == nil {
 		panic("nil lexerObject: Must instantiate lexer with NewLexer()")
@@ -93,7 +111,18 @@ func (lex *lexerObject) Lex(text string) []Token {
     lex.init(text)
 
 	for len(text) > 0 {
-	scan:
-    tok, skip, success := lex.lexOnce(text)
+        tok, skip, found := lex.lexOnce(text)
 
-*/
+        if !found {
+            continue
+        }
+
+        tok.Loc = lex.loc
+        lex.tokens = append(lex.tokens, tok)
+
+        lex.loc += skip
+        text = text[skip:len(text)]
+    }
+    return lex.tokens
+}
+
